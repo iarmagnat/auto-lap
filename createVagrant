@@ -1,0 +1,139 @@
+#!/bin/bash
+clear
+echo ' '
+echo -e '  ──────▄▀▀▀▀▀▀▀▄───────
+  ─────▐─▄█▀▀▀█▄─▌──────
+  ─────▐─▀█▄▄▄█▀─▌──────
+  ──────▀▄▄▄▄▄▄▄▀───────
+  ─────▐▀▄▄▐█▌▄▄▀▌──────
+  ──────▀▄▄███▄▄▀───────
+  █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+  █░░╦─╦╔╗╦─╔╗╔╗╔╦╗╔╗░░█
+  █░░║║║╠─║─║─║║║║║╠─░░█
+  █░░╚╩╝╚╝╚╝╚╝╚╝╩─╩╚╝░░█
+  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+'
+   
+echo ' '
+echo ' '
+echo 'How will we name the directory we create the VM into? (leave empty for newVagrant)'
+read dirName
+if [ -z "$dirName" ]; then
+    dirName='newVagrant'
+fi
+#test does dirName already exists?
+#if yes: ask confirm? overwrite by default? Check for allready up VMs?
+
+echo ' '
+echo 'What box will we use? (leave empty for ubuntu xenial64)'
+read inputedBox
+if [ -z "$inputedBox" ]; then
+    inputedBox='ubuntu/xenial64'
+fi
+
+echo ' '
+echo 'What ip shall we use? (leave empty for 192.168.33.10) '
+read inputedIp
+if [ -z "$inputedIp" ]; then
+    inputedIp='192.168.33.10'
+fi
+
+
+
+mkdir $dirName
+cd $dirName
+mkdir data
+#  Here goes the var if "data" does change name
+touch Vagrantfile
+
+echo '# -*- mode: ruby -*-' >> Vagrantfile
+echo '# vi: set ft=ruby :' >> Vagrantfile
+
+echo 'Vagrant.configure("2") do |config|' >> Vagrantfile
+
+echo -n 'config.vm.box = "' >> Vagrantfile
+echo -n $inputedBox >> Vagrantfile
+echo '"' >> Vagrantfile
+
+echo -n 'config.vm.network "private_network", ip: "' >> Vagrantfile
+echo -n $inputedIp >> Vagrantfile
+echo  '"' >> Vagrantfile
+
+echo ' '
+echo 'Create a shared folder? (Y/n)'
+read input
+if [ -z "$input" ]; then
+    input='y'
+fi
+
+
+
+if [ $input = "y" ]; then
+  echo ' '
+  echo 'Local file name? (leave empty for data)'
+  read inputedLocal
+  if [ -z "$inputedLocal" ]; then
+      inputedLocal='data'
+  fi
+
+
+  echo ' '
+  echo 'Distant file name? (leave empty for /var/www/html)'
+  read inputedDistant
+  if [ -z "$inputedDistant" ]; then
+      inputedDistant='/var/www/html'
+  fi
+
+
+  echo -n 'config.vm.synced_folder "' >> Vagrantfile
+  echo -n $inputedLocal >> Vagrantfile
+  echo -n '", "' >> Vagrantfile
+  echo -n $inputedDistant >> Vagrantfile
+  echo '" ' >> Vagrantfile
+fi
+
+echo''
+echo 'Where do you want to create the vHost (leave empty for /var/www)'
+read vHostLoc
+if [ -z "$vHostLoc" ]; then
+  vHostLoc='/var/www'
+fi
+
+echo''
+echo "How would you like to name your vHost? (leave empty for bis)"
+read site
+if [ -z "$site" ]; then
+  site='bis'
+fi
+
+echo''
+echo "What php version do you want to install? (leave empty for 7)"
+read phpRep
+
+echo "Configuration done, please wait a couple of minutes"
+
+echo 'config.vm.synced_folder "transport", "/transport"' >> Vagrantfile
+mkdir transport
+cd transport
+touch transporteur
+echo $vHostLoc >> transporteur
+touch nomSite
+echo $site >> nomSite
+touch php
+echo $phpRep >> php
+cd ..
+
+echo 'config.vm.provider "virtualbox" do |vb|' >> Vagrantfile
+echo '  vb.memory = "1024"' >> Vagrantfile
+echo "end" >> Vagrantfile
+
+echo 'config.vm.provision "shell" do |s|' >> Vagrantfile
+echo 's.path = "../setup.sh" ' >> Vagrantfile
+
+echo 'end' >> Vagrantfile
+echo 'end' >> Vagrantfile
+
+cp ../vHostScript.bash ./transport
+
+vagrant up
+vagrant ssh
