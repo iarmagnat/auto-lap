@@ -1,5 +1,5 @@
 
-# Auto LMP vagrant script
+# Auto LAP vagrant script
 
 ### Simply clone then run `script.sh` to behold its magic
 
